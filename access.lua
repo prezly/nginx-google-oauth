@@ -37,6 +37,9 @@ local token_secret = ngx.var.ngo_token_secret or "UNSET"
 local set_user = ngx.var.ngo_user
 local email_as_user = ngx.var.ngo_email_as_user
 
+-- Override default oauth expiration period in seconds. Default is 24 hours
+local expires_in = ngx.var.ngo_expires_in or "86400"
+
 -- Force the user to set a token secret
 if token_secret == "UNSET" then
   ngx.log(ngx.ERR, "$ngo_token_secret must be set in Nginx config!")
@@ -107,8 +110,8 @@ else
   -- use version 1 cookies so we don't have to encode. MSIE-old beware
   local json  = jsonmod.decode( res )
   local access_token = json["access_token"]
-  local expires = ngx.time() + json["expires_in"]
-  local cookie_tail = ";version=1;path=/;Max-Age="..json["expires_in"]
+  local expires = ngx.time() + expires_in
+  local cookie_tail = ";version=1;path=/;Max-Age="..expires_in
   if secure_cookies then
     cookie_tail = cookie_tail..";secure"
   end
